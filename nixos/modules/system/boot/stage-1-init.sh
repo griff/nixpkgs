@@ -265,6 +265,8 @@ checkFS() {
     return 0
 }
 
+@fsPostMountFunctions@
+@fsPreMountFunctions@
 
 # Function for mounting a file system.
 mountFS() {
@@ -272,11 +274,15 @@ mountFS() {
     local mountPoint="$2"
     local options="$3"
     local fsType="$4"
+    local preMountFn="$5"
+    local postMountFn="$6"
 
     if [ "$fsType" = auto ]; then
         fsType=$(blkid -o value -s TYPE "$device")
         if [ -z "$fsType" ]; then fsType=auto; fi
     fi
+
+    "fsPreMount_$preMountFn" "/mnt-root$mountPoint" "$device" "$options" "$fsType"
 
     # Filter out x- options, which busybox doesn't do yet.
     local optionsFiltered="$(IFS=,; for i in $options; do if [ "${i:0:2}" != "x-" ]; then echo -n $i,; fi; done)"
@@ -318,6 +324,8 @@ mountFS() {
     [ "$mountPoint" == "/" ] &&
         [ -f "/mnt-root/etc/NIXOS_LUSTRATE" ] &&
         lustrateRoot "/mnt-root"
+
+    "fsPostMount_$postMountFn" "/mnt-root$mountPoint" "$device" "$options" "$fsType"
 }
 
 lustrateRoot () {
@@ -429,6 +437,7 @@ exec 3< @fsInfo@
 while read -u 3 mountPoint; do
     read -u 3 device
     read -u 3 fsType
+    read -u 3 postMountFn
     read -u 3 options
 
     # !!! Really quick hack to support bind mounts, i.e., where the
@@ -464,7 +473,7 @@ while read -u 3 mountPoint; do
     # doing something with $device right now.
     udevadm settle
 
-    mountFS "$device" "$mountPoint" "$options" "$fsType"
+    mountFS "$device" "$mountPoint" "$options" "$fsType" "$postMountFn"
 done
 
 exec 3>&-

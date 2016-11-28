@@ -201,8 +201,39 @@ let
                              && !(hasPrefix "/dev/zram" sd.device)
                             ) config.swapDevices);
 
+    fsPreMountFunctions =
+      let f = fs: (builtins.concatStringsSep "\n" [
+        "fsPreMount_${(builtins.hashString "sha1" fs.preMountCommands)}() {"
+        "local mountPoint=\"$1\""
+        "local device=\"$2\""
+        "local options=\"$3\""
+        "local fsType=\"$4\""
+        fs.preMountCommands
+        "  return 0;"
+        "}"
+      ]);
+      in (concatStringsSep "\n\n" (map f fileSystems));
+
+    fsPostMountFunctions =
+      let f = fs: (builtins.concatStringsSep "\n" [
+        "fsPostMount_${(builtins.hashString "sha1" fs.postMountCommands)}() {"
+        "local mountPoint=\"$1\""
+        "local device=\"$2\""
+        "local options=\"$3\""
+        "local fsType=\"$4\""
+        fs.postMountCommands
+        "  return 0;"
+        "}"
+      ]);
+      in (concatStringsSep "\n\n" (map f fileSystems));
+      
     fsInfo =
-      let f = fs: [ fs.mountPoint (if fs.device != null then fs.device else "/dev/disk/by-label/${fs.label}") fs.fsType (builtins.concatStringsSep "," fs.options) ];
+      let f = fs: [ fs.mountPoint
+        (if fs.device != null then fs.device else "/dev/disk/by-label/${fs.label}")
+        fs.fsType
+        (builtins.hashString "sha1" fs.preMountCommands)
+        (builtins.hashString "sha1" fs.postMountCommands)
+        (builtins.concatStringsSep "," fs.options) ];
       in pkgs.writeText "initrd-fsinfo" (concatStringsSep "\n" (concatMap f fileSystems));
 
     setHostId = optionalString (config.networking.hostId != null) ''
@@ -386,6 +417,22 @@ in
           ramdisk.  By default, this applies to the root file system
           and to the file system containing
           <filename>/nix/store</filename>.
+        '';
+      };
+      options.preMountCommands = mkOption {
+        default = "";
+        type = types.lines;
+        description = ''
+          Shell commands to be executed right before this filesystem is
+          mounted.
+        '';
+      };
+      options.postMountCommands = mkOption {
+        default = "";
+        type = types.lines;
+        description = ''
+          Shell commands to be executed immediately after this filesystem 
+          has been mounted.
         '';
       };
     };
