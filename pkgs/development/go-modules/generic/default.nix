@@ -190,8 +190,10 @@ go.stdenv.mkDerivation (
      ln -s "${dep.src}" "$d/src/${dep.goPackagePath}"
   ''
   ) goPath) + ''
+    mkdir -p "$d/src/$(dirname "${goPackagePath}")"
+    ln -s "$PWD" "$d/src/${goPackagePath}"
     export GOPATH="$d:$GOPATH"
-  '';
+  '' + (args.shellHook or "");
 
   disallowedReferences = lib.optional (!allowGoReference) go
     ++ lib.optional (!dontRenameImports) govers;
