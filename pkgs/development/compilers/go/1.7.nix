@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitHub, tzdata, iana_etc, go_bootstrap, runCommand, writeScriptBin
 , perl, which, pkgconfig, patch, fetchpatch
 , pcre, cacert
-, Security, Foundation, bash }:
+, Security, Foundation, bash, cgo_enabled ? true, go_flags ? ""}:
 
 let
 
@@ -75,6 +75,8 @@ stdenv.mkDerivation rec {
     # Disable cgo lookup tests not works, they depend on resolver
     rm src/net/cgo_unix_test.go
 
+  '' + optionalString (!cgo_enabled) ''
+    sed -i '/TestCurrent/areturn' src/os/user/user_test.go
   '' + optionalString stdenv.isLinux ''
     sed -i 's,/usr/share/zoneinfo/,${tzdata}/share/zoneinfo/,' src/time/zoneinfo_unix.go
   '' + optionalString stdenv.isDarwin ''
@@ -119,7 +121,8 @@ stdenv.mkDerivation rec {
            else throw "Unsupported system";
   GOARM = optionalString (stdenv.system == "armv5tel-linux") "5";
   GO386 = 387; # from Arch: don't assume sse2 on i686
-  CGO_ENABLED = 1;
+  CGO_ENABLED = if cgo_enabled then 1 else 0;
+  GO_FLAGS = go_flags;
   GOROOT_BOOTSTRAP = "${goBootstrap}/share/go";
 
   # The go build actually checks for CC=*/clang and does something different, so we don't

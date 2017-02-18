@@ -4759,6 +4759,11 @@ in
     stdenv = stdenvAdapters.overrideCC pkgs.stdenv pkgs.clang_38;
   });
 
+  go_1_7_static = lowPrio (self.go_1_7.override {
+    cgo_enabled = false;
+    go_flags = "-tags netgo";
+  });
+
   go = self.go_1_7;
 
   go-repo-root = callPackage ../development/tools/go-repo-root { };
@@ -10048,6 +10053,11 @@ in
 
   buildGo17Package = callPackage ../development/go-modules/generic {
     go = go_1_7;
+  };
+
+  buildGo17StaticPackage = callPackage ../development/go-modules/generic {
+    go = go_1_7_static;
+    buildFlags = [ "-tags" "netgo" "--ldflags=\"-s\"" ];
   };
 
   buildGoPackage = buildGo17Package;

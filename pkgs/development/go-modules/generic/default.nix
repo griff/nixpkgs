@@ -1,4 +1,4 @@
-{ go, govers, parallel, lib, fetchgit, fetchhg }:
+{ go, govers, parallel, lib, fetchgit, fetchhg, buildFlags ? [] }:
 
 { name, buildInputs ? [], nativeBuildInputs ? [], passthru ? {}, preFixup ? ""
 
@@ -99,6 +99,9 @@ go.stdenv.mkDerivation (
       rename = to: from: "echo Renaming '${from}' to '${to}'; govers -d -m ${from} ${to}";
       renames = p: lib.concatMapStringsSep "\n" (rename p.goPackagePath) p.goPackageAliases;
     in lib.concatMapStringsSep "\n" renames inputsWithAliases);
+
+  CGO_ENABLED = go.CGO_ENABLED;
+  buildFlags = args.buildFlags or buildFlags;
 
   buildPhase = args.buildPhase or ''
     runHook preBuild
