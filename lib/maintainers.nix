@@ -165,6 +165,7 @@
   gpyh = "Yacine Hmito <yacine.hmito@gmail.com>";
   grahamc = "Graham Christensen <graham@grahamc.com>";
   gridaphobe = "Eric Seidel <eric@seidel.io>";
+  griff = "Brian Olsen <brian@maven-group.org>";
   guibert = "David Guibert <david.guibert@gmail.com>";
   havvy = "Ryan Scheel <ryan.havvy@gmail.com>";
   hbunke = "Hendrik Bunke <bunke.hendrik@gmail.com>";
