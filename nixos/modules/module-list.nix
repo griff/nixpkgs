@@ -591,4 +591,5 @@
   ./virtualisation/vmware-guest.nix
   ./virtualisation/xen-dom0.nix
   ./virtualisation/xe-guest-utilities.nix
+  ../../thonix/modules/system/boot/initrd-thonix-rescue.nix
 ]

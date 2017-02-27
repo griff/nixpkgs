@@ -17733,4 +17733,17 @@ in
   zoom-us = qt55.callPackage ../applications/networking/instant-messengers/zoom-us {};
 
   xulrunner = firefox-unwrapped;
+
+  # ThoNix pkgs
+  thonix = callPackage ../../thonix/pkgs/tools/networking/thonix { };
+
+  thonix-head = if builtins.pathExists ../../thonix/apps/thonix/default.nix then
+    callPackage ../../thonix/apps/thonix { thonix-frontend = thonix-frontend-head; }
+  else thonix;
+
+  thonix-frontend = callPackage ../../thonix/pkgs/tools/networking/thonix/frontend { };
+
+  thonix-frontend-head = if builtins.pathExists ../../thonix/apps/frontend/default.nix then
+    callPackage ../../thonix/apps/frontend {}
+  else thonix-frontend;
 }
