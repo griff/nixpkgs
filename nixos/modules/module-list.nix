@@ -397,6 +397,7 @@
   ./services/networking/rdnssd.nix
   ./services/networking/rpcbind.nix
   ./services/networking/sabnzbd.nix
+  ./services/networking/sandstorm.nix
   ./services/networking/searx.nix
   ./services/networking/seeks.nix
   ./services/networking/skydns.nix

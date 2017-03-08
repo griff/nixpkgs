@@ -17734,6 +17734,10 @@ in
 
   xulrunner = firefox-unwrapped;
 
+  # Sandstorm
+  sandstorm = callPackage ../servers/sandstorm/released.nix { };
+  sandstorm-dev = callPackage ../servers/sandstorm/released.nix { channel = "dev"; };
+
   # ThoNix pkgs
   thonix = callPackage ../../thonix/pkgs/tools/networking/thonix { };
 
