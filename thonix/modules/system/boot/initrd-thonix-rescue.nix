@@ -24,7 +24,7 @@ in
 
     boot.initrd.network.rescue.package = mkOption {
       type = types.package;
-      default = pkgs.thonix-rescue;
+      default = pkgs.thonix;
       description = ''
         Version of ThoNix Rescue package to install. 
       '';
