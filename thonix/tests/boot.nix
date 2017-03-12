@@ -1,17 +1,17 @@
 { system ? builtins.currentSystem }:
 
 with import ../lib/testing.nix { inherit system; };
-with import <nixpkgs/nixos/lib/qemu-flags.nix>;
+with import ../../nixos/lib/qemu-flags.nix;
 with pkgs.lib;
 
 let
 
   iso =
-    (import <nixpkgs/nixos/lib/eval-config.nix> {
+    (import ../../nixos/lib/eval-config.nix {
       inherit system;
       modules =
-        [ ../modules/installer/installation-cd-minimal.nix
-          <nixpkgs/nixos/modules/testing/test-instrumentation.nix>
+        [ ../modules/installer/cd-dvd/installation-cd-minimal.nix
+          ../../nixos/modules/testing/test-instrumentation.nix
         ];
     }).config.system.build.isoImage;
 

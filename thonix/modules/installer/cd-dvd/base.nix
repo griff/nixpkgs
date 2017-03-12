@@ -7,7 +7,7 @@ with lib;
 
 {
   imports =
-    [ <nixpkgs/nixos/modules/installer/cd-dvd/iso-image.nix>];
+    [ ../../../../nixos/modules/installer/cd-dvd/iso-image.nix];
 
   config = {
     boot.initrd.network.enable = true;
