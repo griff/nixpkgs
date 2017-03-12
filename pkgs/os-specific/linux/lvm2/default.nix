@@ -1,10 +1,13 @@
-{ stdenv, fetchurl, pkgconfig, systemd, libudev, utillinux, coreutils, libuuid, enable_dmeventd ? false }:
+{ stdenv, fetchurl, pkgconfig, systemd, libudev, utillinux, coreutils, libuuid,
+  enable_dmeventd ? false, enable_lvmetad ? false, enable_lvmpolld ? false }:
 
 let
   version = "2.02.140";
 in
 
 stdenv.mkDerivation {
+  inherit enable_dmeventd enable_lvmetad enable_lvmpolld;
+
   name = "lvm2-${version}";
 
   src = fetchurl {
@@ -19,7 +22,12 @@ stdenv.mkDerivation {
     "--enable-pkgconfig"
     "--enable-applib"
     "--enable-cmdlib"
-  ] ++ stdenv.lib.optional enable_dmeventd " --enable-dmeventd";
+  ] ++ stdenv.lib.optional enable_dmeventd " --enable-dmeventd"
+    ++ stdenv.lib.optional enable_lvmetad [
+      "--enable-lvmetad"
+      "--disable-udev-systemd-background-jobs"
+    ]
+    ++ stdenv.lib.optional enable_lvmpolld " --enable-lvmpolld";
 
   nativeBuildInputs = [ pkgconfig ];
   buildInputs = [ libudev libuuid ];
@@ -31,9 +39,18 @@ stdenv.mkDerivation {
       substituteInPlace scripts/lvm2_activation_generator_systemd_red_hat.c \
         --replace /usr/sbin/lvm $out/sbin/lvm \
         --replace /usr/bin/udevadm ${systemd.udev.bin}/bin/udevadm
+      substituteInPlace udev/Makefile.in \
+        --replace @bindir@/systemd-run ${systemd.out}/bin/systemd-run
+
+      substituteInPlace make.tmpl.in \
+        --replace @systemdsystemunitdir@ $out/etc/systemd/system
+      substituteInPlace make.tmpl.in \
+        --replace @systemdutildir@ $out/lib/systemd
 
       sed -i /DEFAULT_SYS_DIR/d Makefile.in
       sed -i /DEFAULT_PROFILE_DIR/d conf/Makefile.in
+
+      configureFlags="$configureFlags --sbindir=$out/sbin"
     '';
 
   enableParallelBuilding = true;
@@ -44,17 +61,12 @@ stdenv.mkDerivation {
   preInstall = "installFlags=\"OWNER= GROUP= confdir=$out/etc\"";
 
   # Install systemd stuff.
-  #installTargets = "install install_systemd_generators install_systemd_units install_tmpfiles_configuration";
+  installTargets = "install install_systemd_generators install_systemd_units install_tmpfiles_configuration";
 
   postInstall =
     ''
       substituteInPlace $out/lib/udev/rules.d/13-dm-disk.rules \
         --replace $out/sbin/blkid ${utillinux}/sbin/blkid
-
-      # Systemd stuff
-      mkdir -p $out/etc/systemd/system $out/lib/systemd/system-generators
-      cp scripts/blk_availability_systemd_red_hat.service $out/etc/systemd/system
-      cp scripts/lvm2_activation_generator_systemd_red_hat $out/lib/systemd/system-generators
     '';
 
   meta = {

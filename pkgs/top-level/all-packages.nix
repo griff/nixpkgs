@@ -11787,13 +11787,10 @@ in
   # standalone cryptsetup generator for systemd
   systemd-cryptsetup-generator = callPackage ../os-specific/linux/systemd/cryptsetup-generator.nix { };
 
-  # In nixos, you can set systemd.package = pkgs.systemd_with_lvm2 to get
-  # LVM2 working in systemd.
-  systemd_with_lvm2 = pkgs.appendToName "with-lvm2" (pkgs.lib.overrideDerivation pkgs.systemd (p: {
-      postInstall = p.postInstall + ''
-        cp "${pkgs.lvm2}/lib/systemd/system-generators/"* $out/lib/systemd/system-generators
-      '';
-  }));
+  # Before the systemd module had a config option for system-generators in
+  # packages this package was needed to get LVM support.
+  # It is kept here and just aliased to systemd for backwards compatibility.
+  systemd_with_lvm2 = systemd;
 
   sysvinit = callPackage ../os-specific/linux/sysvinit { };
 
