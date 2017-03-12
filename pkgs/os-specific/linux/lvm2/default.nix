@@ -56,6 +56,7 @@ stdenv.mkDerivation {
   enableParallelBuilding = true;
 
   #patches = [ ./purity.patch ];
+  patches = [ ./debug.patch ];
 
   # To prevent make install from failing.
   preInstall = "installFlags=\"OWNER= GROUP= confdir=$out/etc\"";
