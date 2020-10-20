@@ -12,30 +12,45 @@ import ./make-test-python.nix {
     services.postfix.rootAlias = "timmy";
     services.postfix.extraConfig = "mailbox_transport = lmtp:unix:/var/run/dovecot2/lmtp";
     services.dovecot2.enable = true;
-    services.dovecot2.protocols = [ "imap" "pop3" "lmtp" "sieve" ];
-    services.dovecot2.modules = [ pkgs.dovecot_pigeonhole ];
+    services.dovecot2.protocols = [ "imap" "pop3" "lmtp" ];
     services.dovecot2.mailUser = "blue";
     services.dovecot2.mailGroup = "blue";
     services.dovecot2.mailboxes.Junk = {
       specialUse = "Junk";
       auto = "subscribe";
     };
+    services.dovecot2.sieve.enable = true;
     services.dovecot2.extraConfig = ''
       mail_debug = yes
 
       protocol lmtp {
         postmaster_address = root@localhost
         auth_username_format = %n
-        mail_plugins = $mail_plugins sieve
       }
     '';
-    services.dovecot2.sieveScripts.before = pkgs.writeText "before.sieve" ''
-      require "fileinto";
-      if header :is "X-Spam" "Yes" {
-        fileinto "Junk";
-        stop;
-      }
-    '';
+    services.dovecot2.sieve.beforeScripts = [
+      (pkgs.writeText "before.sieve" ''
+        require "fileinto";
+        if header :is "X-Spam" "Yes" {
+          fileinto "Junk";
+          stop;
+        }
+      '')
+      ''
+        require "fileinto";
+        if header :is "Junk-It" "Yes" {
+          fileinto "Junk";
+          stop;
+        }
+      ''
+      ''/* test comment */
+        require "fileinto";
+        if header :is "MyJunk" "Yes" {
+          fileinto "Junk";
+          stop;
+        }
+      ''
+    ];
     environment.systemPackages = let
       sendTestMail = pkgs.writeScriptBin "send-testmail" ''
         #!${pkgs.runtimeShell}
