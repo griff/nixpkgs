@@ -599,6 +599,34 @@ let
           ];
         };
       };
+      dylibLink = {
+        crateName = "dylib_link";
+        type = ["rlib" "dylib"];
+        edition = "2021";
+        src = symlinkJoin rec {
+          name = "link-with-dylib";
+          paths = [
+            (mkFile "src/lib.rs" ''
+              pub fn hello() -> &'static str {
+                  "World"
+              }
+            '')
+
+            (mkFile "tests/usage.rs" ''
+              use dylib_link::hello;
+
+              #[test]
+              fn tests_usage() {
+                  assert_eq!("World", hello());
+              }
+            '')
+          ];
+        };
+        buildTests = true;
+        expectedTestOutputs = [
+          "test tests_usage ... ok"
+        ];
+      };
     };
     brotliCrates = (callPackage ./brotli-crates.nix {});
     rcgenCrates = callPackage ./rcgen-crates.nix {
@@ -607,6 +635,40 @@ let
       defaultCrateOverrides = defaultCrateOverrides // {
         rcgen = prev: {
           buildInputs = lib.optional stdenv.isDarwin darwin.apple_sdk.frameworks.Security;
+        };
+      };
+    };
+    procMacroTestCrates = callPackage ./proc-macro-test-crates.nix {
+      defaultCrateOverrides = defaultCrateOverrides // {
+        "proc-macro-test" = prev: {
+          src = symlinkJoin {
+            name = "proc-macro-test-src";
+            paths = [
+              (mkFile "src/lib.rs" ''
+                use proc_macro::TokenStream;
+                use quote::quote;
+
+                #[proc_macro]
+                pub fn hello(_item: TokenStream) -> TokenStream {
+                    quote! {
+                        pub fn hello() -> &'static str {
+                            "World"
+                        }
+                    }.into()
+                }
+              '')
+              (mkFile "tests/test.rs" ''
+                use proc_macro_test::hello;
+
+                hello!();
+
+                #[test]
+                fn import_test() {
+                    assert_eq!("World", hello());
+                }
+              '')
+            ];
+          };
         };
       };
     };
@@ -734,6 +796,10 @@ let
     '' else ''
       test -x '${pkg}/bin/rcgen' && touch $out
     '');
+
+    procMacroTest = (procMacroTestCrates.rootCrate.build.override {
+        runTests = true;
+      }).test;
   };
   test = releaseTools.aggregate {
     name = "buildRustCrate-tests";

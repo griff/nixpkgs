@@ -26,9 +26,12 @@ build_lib() {
     $EXTRA_RUSTC_FLAGS \
     --color $colors
 
-  EXTRA_LIB=" --extern $CRATE_NAME=target/lib/lib$CRATE_NAME-$metadata.rlib"
-  if [ -e target/deps/lib$CRATE_NAME-$metadata$LIB_EXT ]; then
-     EXTRA_LIB="$EXTRA_LIB --extern $CRATE_NAME=target/lib/lib$CRATE_NAME-$metadata$LIB_EXT"
+  if [ -e target/lib/lib$CRATE_NAME-$metadata.rlib ]; then
+    EXTRA_LIB=" --extern $CRATE_NAME=target/lib/lib$CRATE_NAME-$metadata.rlib"
+  elif [ -e target/lib/lib$CRATE_NAME-$metadata$LIB_EXT ]; then
+     EXTRA_LIB=" --extern $CRATE_NAME=target/lib/lib$CRATE_NAME-$metadata$LIB_EXT"
+  elif [ -e target/lib/$CRATE_NAME-$metadata$BUILD_LIB_EXT ]; then
+    EXTRA_LIB=" --extern $CRATE_NAME=target/lib/lib$CRATE_NAME-$metadata$BUILD_LIB_EXT"
   fi
 }
 

@@ -53,6 +53,7 @@
     LIB_RUSTC_OPTS="${libRustcOpts}"
     BIN_RUSTC_OPTS="${binRustcOpts}"
     LIB_EXT="${stdenv.hostPlatform.extensions.library}"
+    BUILD_LIB_EXT="${stdenv.buildPlatform.extensions.library}"
     LIB_PATH="${libPath}"
     LIB_NAME="${libName}"
 
