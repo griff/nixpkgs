@@ -3,6 +3,8 @@
 , buildRustCrate
 , callPackage
 , releaseTools
+, defaultCrateOverrides
+, darwin
 , runCommand
 , runCommandCC
 , stdenv
@@ -602,6 +604,11 @@ let
     rcgenCrates = callPackage ./rcgen-crates.nix {
       # Suppress deprecation warning
       buildRustCrate = null;
+      defaultCrateOverrides = defaultCrateOverrides // {
+        rcgen = prev: {
+          buildInputs = lib.optional stdenv.isDarwin darwin.apple_sdk.frameworks.Security;
+        };
+      };
     };
     tests = lib.mapAttrs (key: value: mkTest (value // lib.optionalAttrs (!value?crateName) { crateName = key; })) cases;
   in tests // rec {
